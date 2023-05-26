@@ -26,6 +26,8 @@ timeout = 5
 ### END NODE INFO
 """
 
+VLIM = 300
+
 class HV500Server(SerialDeviceServer):
     """Serial server for the HV500-16 low noise voltage supply."""
 
@@ -87,10 +89,12 @@ class HV500Server(SerialDeviceServer):
             channel: int, channel between 1 and 16.
             voltage: float, voltage in volts.
         """
-        ch_str = self.channel_to_str(channel)
-        volt_str = self.voltage_to_kw(voltage)
-        yield self.ser.write(self.IDN+" CH"+ch_str+" "+volt_str+"\r")
-        val = yield self.ser.read_line()
+        if voltage > VLIM or voltage < -VLIM:
+            raise ValueError("Voltage setpoint out of bounds.")
+        else:
+            ch_str = self.channel_to_str(channel)
+            volt_str = self.voltage_to_kw(voltage)
+            yield self.ser.write(self.IDN+" CH"+ch_str+" "+volt_str+"\r")
 
 
 if __name__ == "__main__":
